@@ -146,7 +146,7 @@ def get_best_rate(crypto):
     return best_provider, best_rate
 
 # --- PAYSTACK INTEGRATION (MOCK) ---
-def resolve_bank_account(account_number, bank_code):
+def resolve_bank_account(account_number, bank_code): 
     """
     Mock Paystack Account Resolve.
     In production, this would call https://api.paystack.co/bank/resolve
