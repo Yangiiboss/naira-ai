@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 const CRYPTOS = ["USDT", "BTC", "ETH", "BNB", "TRX", "DOGE"];
 
@@ -16,8 +17,8 @@ export default function Dashboard() {
         const fetchRate = async () => {
             setLoading(true);
             try {
-                const res = await fetch(`/api/py/rates?crypto=${crypto}&amount=${amount}`);
-                const data = await res.json();
+                const res = await axios.get(`/api/rates?crypto=${crypto}&amount=${amount}`);
+                const data = res.data;
                 setQuote(data);
             } catch (e) {
                 console.error(e);
@@ -56,7 +57,7 @@ export default function Dashboard() {
                                 onChange={(e) => setCrypto(e.target.value)}
                                 className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-primary"
                             >
-                                {CRYPTOS.map(c => <option key={c} value={c}>{c}</option>)}
+                                {CRYPTOS.map(c => <option className="text-gray-700" key={c} value={c}>{c}</option>)}
                             </select>
                         </div>
 
@@ -73,7 +74,7 @@ export default function Dashboard() {
                         {quote && (
                             <div className="mt-6 p-4 rounded-lg bg-primary/10 border border-primary/20">
                                 <div className="flex justify-between mb-2">
-                                    <span className="text-gray-300">Best Rate ({quote.provider}):</span>
+                                    <span className="text-gray-300">Best Rate ({quote.best_provider}):</span>
                                     <span className="font-bold text-primary">₦{quote.rate.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-sm text-gray-400 mb-4">
