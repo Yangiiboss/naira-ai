@@ -1,69 +1,53 @@
-import { NextResponse } from "next/server";
-import { fetchBanxaRate, fetchBinanceSpotPrice, fetchMoonPayRate, fetchWyreRate } from "./helpers/helpers";
+import { NextResponse } from 'next/server';
 
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const crypto = (searchParams.get("crypto") || "USDT").toUpperCase();
-    const amount = parseFloat(searchParams.get("amount") || "0");
+const PLATFORM_FEE = 0.009;
 
-    // Validate crypto symbol
-    const supportedCryptos = ["USDT", "BTC", "ETH", "BNB", "TRX", "DOGE"];
-    if (!supportedCryptos.includes(crypto)) {
-      return NextResponse.json(
-        { error: "Unsupported cryptocurrency symbol." },
-        { status: 400 }
-      );
+function generateMemo() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const crypto = searchParams.get('crypto') || 'USDT';
+  const amount = parseFloat(searchParams.get('amount') || '0');
+
+  // Mock Rate Aggregation
+  const baseRates: Record<string, number> = {
+    "USDT": 1680.00, "BTC": 115000000.00, "ETH": 6200000.00,
+    "BNB": 1050000.00, "TRX": 195.00, "DOGE": 280.00
+  };
+
+  const marketPrice = baseRates[crypto] || 1000.0;
+
+  // Simulate providers
+  const providers = {
+    "Binance P2P": marketPrice * (0.99 + Math.random() * 0.02),
+    "Transak": marketPrice * (0.98 + Math.random() * 0.02),
+    "Breet": marketPrice * (0.97 + Math.random() * 0.02),
+    "YellowCard": marketPrice * (0.98 + Math.random() * 0.025)
+  };
+
+  // Find best provider
+  let bestProvider = "Binance P2P";
+  let bestRate = 0;
+
+  Object.entries(providers).forEach(([provider, rate]) => {
+    if (rate > bestRate) {
+      bestRate = rate;
+      bestProvider = provider;
     }
+  });
 
-    // Fetch rates concurrently
-    const [
-      binanceRate,
-      moonPayRate,
-      banxaRate,
-      wyreRate,
-    ] = await Promise.all([
-        fetchBinanceSpotPrice(crypto),
-        fetchMoonPayRate(crypto),
-        fetchBanxaRate(crypto),
-        fetchWyreRate(crypto),
-    ]);
+  const grossNgn = amount * bestRate;
+  const feeAmount = grossNgn * PLATFORM_FEE;
+  const netNgn = grossNgn - feeAmount;
 
-    // Build providers object (only those with rates)
-    const providers: Record<string, number> = {};
-    if (binanceRate) providers["Binance"] = binanceRate;
-    if (moonPayRate) providers["Moon Pay"] = moonPayRate;
-    if (banxaRate) providers["Banxa"] = banxaRate;
-    if (wyreRate) providers["Wyre"] = wyreRate;
-
-    if (Object.keys(providers).length === 0) {
-      return NextResponse.json(
-        { error: "Failed to fetch any rates from providers." },
-        { status: 503 }
-      );
-    }
-
-    // Pick best provider with highest rate (you can change logic if needed)
-    const best_provider = Object.keys(providers).reduce((a, b) =>
-      providers[a] > providers[b] ? a : b
-    );
-    const best_rate = providers[best_provider];
-
-    const PLATFORM_FEE = 0.009;
-
-    const gross_ngn = amount * best_rate;
-    const fee_amount = gross_ngn * PLATFORM_FEE;
-    const net_ngn = gross_ngn - fee_amount;
-
-    return NextResponse.json({
-      providers,
-      best_provider,
-      rate: Number(best_rate.toFixed(2)),
-      gross_ngn: Number(gross_ngn.toFixed(2)),
-      fee: Number(fee_amount.toFixed(2)),
-      net_ngn: Number(net_ngn.toFixed(2)),
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
+  return NextResponse.json({
+    provider: bestProvider,
+    rate: Number(bestRate.toFixed(2)),
+    gross_ngn: Number(grossNgn.toFixed(2)),
+    fee: Number(feeAmount.toFixed(2)),
+    net_ngn: Number(netNgn.toFixed(2)),
+    memo: generateMemo()
+  });
 }

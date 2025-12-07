@@ -4,9 +4,10 @@ The final, production-ready NairaAI 2.0. Built with Next.js 14 (Frontend) and Py
 
 ## 🛠 Tech Stack
 - **Frontend**: Next.js 14 (App Router), Tailwind CSS, Framer Motion, TypeScript.
-- **Backend**: Python Serverless Functions (`/api/index.py`).
-- **Database**: MongoDB (Mongoose).
+- **Backend**: Next.js API Routes (TypeScript).
+- **Database**: Supabase (PostgreSQL).
 - **Auth**: NextAuth.js.
+- **Deposits**: Shared BEP-20 Address + Memo System.
 
 ## 📂 Project Structure
 - `app/`: Next.js Frontend.

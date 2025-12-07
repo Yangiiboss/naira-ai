@@ -1,18 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
-interface ResolveRequest {
-  account_number: string;
-  bank_code: string;
-}
+export async function POST(request: Request) {
+  const body = await request.json();
+  const { account_number } = body;
 
-export async function POST(req: Request) {
-  const body: ResolveRequest = await req.json();
-  const { account_number, bank_code } = body;
-
+  // Mock Paystack Resolution
   if (account_number && account_number.toString().length === 10) {
     return NextResponse.json({
       status: true,
-      account_name: "MOCK USER NAME",
+      account_name: "MOCK USER NAME"
     });
   }
 
