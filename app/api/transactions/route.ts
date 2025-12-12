@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import dbConnect from '@/lib/mongodb';
+import Transaction from '@/models/Transaction';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -9,30 +10,22 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-    if (error) {
+    try {
+        await dbConnect();
+        const transactions = await Transaction.find({ user_id: userId }).sort({ created_at: -1 });
+        return NextResponse.json(transactions);
+    } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
-
-    return NextResponse.json(data);
 }
 
 export async function POST(request: Request) {
-    const body = await request.json();
-
-    const { data, error } = await supabase
-        .from('transactions')
-        .insert([body])
-        .select();
-
-    if (error) {
+    try {
+        const body = await request.json();
+        await dbConnect();
+        const transaction = await Transaction.create(body);
+        return NextResponse.json(transaction);
+    } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
-
-    return NextResponse.json(data);
 }
